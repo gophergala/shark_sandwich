@@ -22,18 +22,23 @@ func init() {
 }
 
 type (
+	BaseStats struct {
+		Name  string
+		Life  int64
+		Speed int64
+		Power int64
+	}
 	HeroSheet struct {
-		Name     string
-		Life     int64
-		Speed    int64
-		Power    int64
 		Ancestry int64
+		BaseStats
 	}
 )
 
 func NewHero(name string) *HeroSheet {
 	hero := &HeroSheet{
-		Name:     name,
+		BaseStats: BaseStats{
+			Name: name,
+		},
 		Ancestry: 1,
 	}
 	hero.genStats()
@@ -41,9 +46,9 @@ func NewHero(name string) *HeroSheet {
 }
 
 func (h *HeroSheet) genStats() {
-	h.Life = random(HERO_MIN_LIFE, HERO_MAX_LIFE)
-	h.Power = random(HERO_MIN_POWER, HERO_MAX_POWER)
-	h.Speed = random(HERO_MIN_SPEED, HERO_MAX_SPEED)
+	h.BaseStats.Life = random(HERO_MIN_LIFE, HERO_MAX_LIFE)
+	h.BaseStats.Power = random(HERO_MIN_POWER, HERO_MAX_POWER)
+	h.BaseStats.Speed = random(HERO_MIN_SPEED, HERO_MAX_SPEED)
 }
 
 func random(min, max int64) int64 {
@@ -53,9 +58,9 @@ func random(min, max int64) int64 {
 
 func (h *HeroSheet) String() string {
 	s := fmt.Sprintf("\n\tName: %v\n\tLife: %v\n\tPower: %v\n\tSpeed: %v\n",
-		h.Name,
-		h.Life,
-		h.Power,
-		h.Speed)
+		h.BaseStats.Name,
+		h.BaseStats.Life,
+		h.BaseStats.Power,
+		h.BaseStats.Speed)
 	return s
 }
