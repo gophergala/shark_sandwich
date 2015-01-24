@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	ConsoleReader := bufio.NewReader(os.Stdin)
 
 	// todo: should be prompted to load an existing hero here as well
@@ -26,16 +25,14 @@ func main() {
 	fmt.Printf("%+v\n", hero)
 
 	// todo: repl loop to deal with commands
-	//command, err := ConsoleReader.ReadString('\n')
-	command := ""
-	for command != "quit" {
+	fmt.Println("Please enter command: ")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
 		fmt.Println("Please enter command: ")
-		command, err := ConsoleReader.ReadString('\n')
-		if err != nil {
-			panic(err)
+		line := scanner.Text()
+		if line == "quit" {
+			break
 		}
-
-		// debug
-		fmt.Println(command)
+		// do something with the command
 	}
 }
