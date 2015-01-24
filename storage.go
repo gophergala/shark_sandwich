@@ -6,13 +6,18 @@ import (
 	"os"
 )
 
+type Event struct {
+	PlayerId string
+	Message  string
+}
+
 type Storage struct {
-	Events <-chan string
+	Events <-chan Event
 }
 
 func NewStorage() *Storage {
 	storage := &Storage{
-		Events: make(chan string),
+		Events: make(chan Event),
 	}
 	storage.initEventStream()
 	return storage
@@ -20,8 +25,8 @@ func NewStorage() *Storage {
 
 func (s *Storage) initEventStream() {
 	go func() {
-		for _ = range s.Events {
-
+		for event := range s.Events {
+			s.storeEvent(event)
 		}
 	}()
 }
@@ -54,8 +59,25 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 	// todo: Git commit and git push
 }
 
-func (s *Storage) StoreEvent(hero HeroSheet, event string) error {
-	// todo: Git commit new event on the player file. git push to remote
+func (s *Storage) storeEvent(event Event) error {
+	filename := "players/" + event.PlayerId + "/" + event.PlayerId + "events"
+	file := &os.File{}
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		file, err = os.Create(filename)
+		if err != nil {
+			return err
+		}
+	} else {
+		file, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			return err
+		}
+	}
+	defer file.Close()
+
+	file.WriteString(event.Message + "\n")
+
+	// todo: Git commit and git push to remote
 	return nil
 }
 
@@ -65,27 +87,30 @@ func (s *Storage) GetNewUpdates() error {
 }
 
 func (s *Storage) GetPlayer(playerId string) (HeroSheet, error) {
-	return getPlayer(playerId)
-}
+	contents, err := s.getFileContents("players/" + playerId + "/" + playerId)
+	if err != nil {
+		return HeroSheet{}, err
+	}
 
-func (s *Storage) GetGameObject(id string) (string, error) {
-	// todo: load and return file from file system
-	return "", nil
-}
-
-func (s *Storage) GetGameObjects(id []string) ([]string, error) {
-	// todo: load and return multiple file from file system
-	return make([]string, 0), nil
-}
-
-func getPlayer(playerId string) (HeroSheet, error) {
-	contents, _ := ioutil.ReadFile("players/" + playerId + "/" + playerId)
 	heroSheet := HeroSheet{}
-	err := json.Unmarshal(contents, &heroSheet)
-
+	err = json.Unmarshal(contents, &heroSheet)
 	if err != nil {
 		return HeroSheet{}, err
 	}
 
 	return heroSheet, nil
+}
+
+func (s *Storage) GetGameObject(id string) ([]byte, error) {
+	contents, err := s.getFileContents(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return contents, nil
+}
+
+func (s *Storage) getFileContents(filename string) ([]byte, error) {
+	contents, err := ioutil.ReadFile(filename)
+	return contents, err
 }
