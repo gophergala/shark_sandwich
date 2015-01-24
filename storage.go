@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/libgit2/git2go"
 	"io/ioutil"
 	"os"
 )
@@ -12,7 +13,8 @@ type Event struct {
 }
 
 type Storage struct {
-	Events <-chan Event
+	Events     <-chan Event
+	repository *git.Repository
 }
 
 func NewStorage() *Storage {
@@ -31,8 +33,42 @@ func (s *Storage) initEventStream() {
 	}()
 }
 
-func (s *Storage) Clone(repoUrl string) error {
-	// todo: Clone repo with provided url
+func (s *Storage) Open(path string) error {
+	repo, err := git.OpenRepository(path)
+	if err != nil {
+		return err
+	}
+	s.repository = repo
+
+	return nil
+}
+
+func (s *Storage) Clone(repoUrl string, path string) error {
+	checkoutOptions := &git.CheckoutOpts{
+		Strategy: git.CheckoutSafe,
+	}
+	cloneOptions := &git.CloneOptions{
+		Bare:           false,
+		CheckoutBranch: "master",
+		CheckoutOpts:   checkoutOptions,
+	}
+
+	repo, err := git.Clone(repoUrl, path, cloneOptions)
+	if err != nil {
+		return err
+	}
+	s.repository = repo
+
+	return nil
+}
+
+func (s *Storage) Init(path string) error {
+	repo, err := git.InitRepository(path, false)
+	if err != nil {
+		return err
+	}
+	s.repository = repo
+
 	return nil
 }
 
