@@ -14,23 +14,15 @@ func TestAdventure(t *testing.T) {
 	}
 }
 
-func TestAdventureHasOutcome(t *testing.T) {
-	h := NewHero("Durdle")
-	a := NewAdventure(h)
+func TestGenerateAdventureHasOutcome(t *testing.T) {
+	a := generateAdventure()
 
-	err, outcome := a.Embark()
-
-	if err != nil {
-		t.Log("Error on adventure: %s", err)
-		t.Fail()
-	}
-
-	switch outcome {
+	switch a {
 	case ADVENTURE_OUTCOME_DISCOVERY:
 	case ADVENTURE_OUTCOME_ENCOUNTER:
 	case ADVENTURE_OUTCOME_WANDER:
 	default:
-		t.Logf("Unsupported adventure outcome: %v", outcome)
+		t.Logf("Unsupported adventure generated: %v", a)
 		t.Fail()
 	}
 }

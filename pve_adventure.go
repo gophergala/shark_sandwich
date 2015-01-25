@@ -3,23 +3,33 @@ package main
 import ()
 
 const (
-	ADVENTURE_OUTCOME_ENCOUNTER AdventureOutcome = 1
-	ADVENTURE_OUTCOME_WANDER    AdventureOutcome = 2
-	ADVENTURE_OUTCOME_DISCOVERY AdventureOutcome = 3
+	ADVENTURE_TYPE_ENCOUNTER AdventureType = 1
+	ADVENTURE_TYPE_WANDER    AdventureType = 2
+	ADVENTURE_TYPE_DISCOVERY AdventureType = 3
 )
 
 type (
-	AdventureOutcome int
-	Adventure        struct {
+	AdventureType int
+	Adventure     struct {
+		Type AdventureType
 	}
 )
 
 func NewAdventure(h *HeroSheet) *Adventure {
-	return &Adventure{}
+	return &Adventure{
+		Type: generateAdventure(),
+	}
 }
 
-func (a *Adventure) Embark() (error, AdventureOutcome) {
-	outcome := AdventureOutcome(random(1, 4))
+func (a *Adventure) generateAdventure() (error, AdventureType) {
+	return AdventureType(random(1, 3))
+}
 
-	return nil, outcome
+func (a *Adventure) Embark() {
+	switch a.Type {
+	case ADVENTURE_TYPE_DISCOVERY:
+	case ADVENTURE_TYPE_ENCOUNTER:
+	case ADVENTURE_TYPE_WANDER:
+
+	}
 }
