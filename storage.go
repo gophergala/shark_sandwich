@@ -17,6 +17,7 @@ type Event struct {
 type Storage struct {
 	Events     <-chan Event
 	repository *git.Repository
+	path       string
 	config     *git.Config
 }
 
@@ -70,6 +71,7 @@ func (s *Storage) OpenRepository(path string) error {
 		return err
 	}
 	s.repository = repo
+	s.path = path
 
 	return nil
 }
@@ -90,22 +92,19 @@ func (s *Storage) CloneRepository(repoUrl string, path string) error {
 	}
 	repo.CreateRemote("origin", path)
 	s.repository = repo
-
-	return nil
-}
-
-func (s *Storage) NewRepository(path string) error {
-	repo, err := git.InitRepository(path, false)
-	if err != nil {
-		return err
-	}
-	s.repository = repo
+	s.path = path
 
 	return nil
 }
 
 func (s *Storage) StorePlayer(hero HeroSheet) error {
-	file, err := os.Create("players/" + hero.Name + "/" + hero.Name)
+	err := os.MkdirAll(s.path+"/players/"+hero.Name, 0755)
+	if err != nil {
+		return err
+	}
+
+	filename := s.path + "/players/" + hero.Name + "/" + hero.Name
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -123,16 +122,21 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 
 	file.Sync()
 
-	err = s.commitCurrentIndex()
+	return s.commitCurrentIndex()
+	//if err != nil {
+	//	return err
+	//}
+
+	//return s.pushLatestCommits()
+}
+
+func (s *Storage) storeEvent(event Event) error {
+	err := os.MkdirAll(s.path+"/players/"+event.PlayerId, 0755)
 	if err != nil {
 		return err
 	}
 
-	return s.pushLatestCommits()
-}
-
-func (s *Storage) storeEvent(event Event) error {
-	filename := "players/" + event.PlayerId + "/" + event.PlayerId + "events"
+	filename := s.path + "/players/" + event.PlayerId + "/" + event.PlayerId + "events"
 	file := &os.File{}
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		file, err = os.Create(filename)
@@ -149,12 +153,12 @@ func (s *Storage) storeEvent(event Event) error {
 
 	file.WriteString(event.Message + "\n")
 
-	err = s.commitCurrentIndex()
-	if err != nil {
-		return err
-	}
+	return s.commitCurrentIndex()
+	//if err != nil {
+	//	return err
+	//}
 
-	return s.pushLatestCommits()
+	//return s.pushLatestCommits()
 }
 
 func (s *Storage) GetNewUpdates() error {
@@ -167,7 +171,7 @@ func (s *Storage) GetNewUpdates() error {
 }
 
 func (s *Storage) GetPlayer(playerId string) (HeroSheet, error) {
-	contents, err := s.getFileContents("players/" + playerId + "/" + playerId)
+	contents, err := s.getFileContents(s.path + "/players/" + playerId + "/" + playerId)
 	if err != nil {
 		return HeroSheet{}, err
 	}

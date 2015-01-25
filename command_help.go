@@ -14,12 +14,12 @@ type CommandHelp struct {
 }
 
 func (command *CommandHelp) Init() {
-	command.Line1 = "adventure		:	Set out on an adventure to find experience, loot, and random battles."
-	command.Line2 = "friends		:	See who your friends are!"
-	command.Line3 = "me		: 	Look at your stats."
-	command.Line4 = "stuff		: 	See your stuff."
-	command.Line5 = "shop		:	Sell your stuff, buy more stuff."
-	command.Line6 = "quit		:	Quit the game :-("
+	command.Line1 = "adventure\t: Set out on an adventure to find experience, loot, and random battles."
+	command.Line2 = "friends\t: See who your friends are!"
+	command.Line3 = "me\t: Look at your stats."
+	command.Line4 = "stuff\t: See your stuff."
+	command.Line5 = "shop\t: Sell your stuff, buy more stuff."
+	command.Line6 = "quit\t: Quit the game :-("
 
 }
 
