@@ -27,6 +27,7 @@ type (
 		Life  int64
 		Speed int64
 		Power int64
+		Xp    int64
 	}
 	HeroSheet struct {
 		Ancestry int64

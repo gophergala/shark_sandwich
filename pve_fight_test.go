@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -28,7 +27,7 @@ func TestFight(t *testing.T) {
 	e := NewEnemy(h)
 	called := false
 
-	callback := func(e interface{}) {
+	callback := func(e Event) {
 		called = true
 	}
 
