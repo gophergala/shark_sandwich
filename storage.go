@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const CURRENT_PLAYER_CONFIG_KEY string = "current_game_player"
+
 type Event struct {
 	PlayerId string
 	Message  string
@@ -15,14 +17,26 @@ type Event struct {
 type Storage struct {
 	Events     <-chan Event
 	repository *git.Repository
+	config     *git.Config
 }
 
-func NewStorage() *Storage {
+func NewStorage() (*Storage, error) {
+	configPath, err := git.ConfigFindGlobal()
+	if err != nil {
+		return nil, err
+	}
+	config, err := git.OpenOndisk(nil, configPath)
+	if err != nil {
+		return nil, err
+	}
+
 	storage := &Storage{
 		Events: make(chan Event),
+		config: config,
 	}
 	storage.initEventStream()
-	return storage
+
+	return storage, nil
 }
 
 func (s *Storage) initEventStream() {
@@ -33,7 +47,24 @@ func (s *Storage) initEventStream() {
 	}()
 }
 
-func (s *Storage) Open(path string) error {
+func (s *Storage) GetCurrentPlayer() (string, error) {
+	val, err := s.config.LookupString(CURRENT_PLAYER_CONFIG_KEY)
+	if err != nil {
+		return "", err
+	}
+
+	return val, nil
+}
+
+func (s *Storage) SetCurrentPlayer(playerId string) error {
+	if err := s.config.SetString(CURRENT_PLAYER_CONFIG_KEY, playerId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) OpenRepository(path string) error {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
 		return err
@@ -43,7 +74,7 @@ func (s *Storage) Open(path string) error {
 	return nil
 }
 
-func (s *Storage) Clone(repoUrl string, path string) error {
+func (s *Storage) CloneRepository(repoUrl string, path string) error {
 	checkoutOptions := &git.CheckoutOpts{
 		Strategy: git.CheckoutSafe,
 	}
@@ -57,12 +88,13 @@ func (s *Storage) Clone(repoUrl string, path string) error {
 	if err != nil {
 		return err
 	}
+	repo.CreateRemote("origin", path)
 	s.repository = repo
 
 	return nil
 }
 
-func (s *Storage) Init(path string) error {
+func (s *Storage) NewRepository(path string) error {
 	repo, err := git.InitRepository(path, false)
 	if err != nil {
 		return err
@@ -90,9 +122,13 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 	}
 
 	file.Sync()
-	return nil
 
-	// todo: Git commit and git push
+	err = s.commitCurrentIndex()
+	if err != nil {
+		return err
+	}
+
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) storeEvent(event Event) error {
@@ -113,13 +149,21 @@ func (s *Storage) storeEvent(event Event) error {
 
 	file.WriteString(event.Message + "\n")
 
-	// todo: Git commit and git push to remote
-	return nil
+	err = s.commitCurrentIndex()
+	if err != nil {
+		return err
+	}
+
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) GetNewUpdates() error {
-	// todo: git fetch
-	return nil
+	remote, err := s.repository.LookupRemote("origin")
+	if err != nil {
+		return err
+	}
+
+	return remote.Fetch([]string{"master"}, nil, "")
 }
 
 func (s *Storage) GetPlayer(playerId string) (HeroSheet, error) {
@@ -149,4 +193,32 @@ func (s *Storage) GetGameObject(id string) ([]byte, error) {
 func (s *Storage) getFileContents(filename string) ([]byte, error) {
 	contents, err := ioutil.ReadFile(filename)
 	return contents, err
+}
+
+func (s *Storage) commitCurrentIndex() error {
+	index, err := s.repository.Index()
+	if err != nil {
+		return err
+	}
+
+	err = index.AddAll([]string{}, git.IndexAddDefault, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = index.WriteTreeTo(s.repository)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) pushLatestCommits() error {
+	remote, err := s.repository.LookupRemote("origin")
+	if err != nil {
+		return err
+	}
+
+	return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
 }
