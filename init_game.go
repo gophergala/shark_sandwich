@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 	"os"
 	"strings"
 )
@@ -41,7 +42,9 @@ func InitGame(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error)
 }
 
 func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
-	fmt.Print("There is not a current game in this folder. Please enter a folder location to play the game in: ")
+	ct.ChangeColor(ct.Red, true, ct.None, false)
+	fmt.Print("Hmm. I don't see a game in this folder. Please enter a folder location to start the game from: ")
+	ct.ResetColor()
 	folderPath, err := ConsoleReader.ReadString('\n')
 	if err != nil {
 		return err
@@ -50,7 +53,9 @@ func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
 	folderPath = strings.TrimSpace(folderPath)
 	err = storage.OpenRepository(folderPath)
 	if err != nil {
-		fmt.Print("There is not a current game in this folder. Please enter a remote url to load a game: ")
+		ct.ChangeColor(ct.Magenta, true, ct.None, false)
+		fmt.Print("There is not a game there either. Let's pull down a new game. Please enter a URL to load a game: ")
+		ct.ResetColor()
 		remoteUrl, err := ConsoleReader.ReadString('\n')
 		if err != nil {
 			return err
@@ -61,13 +66,24 @@ func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
 		if err != nil {
 			return err
 		}
+		ct.ChangeColor(ct.Green, true, ct.None, false)
+		fmt.Println("The game is downloaded and ready to go! Let's play!")
+		fmt.Println("")
+		ct.ResetColor()
 	}
+
+	ct.ChangeColor(ct.Green, true, ct.None, false)
+	fmt.Println("Game found! Let's play!")
+	fmt.Println("")
+	ct.ResetColor()
 
 	return nil
 }
 
 func createNewPlayer(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error) {
+	ct.ChangeColor(ct.Cyan, true, ct.None, false)
 	fmt.Print("Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
+	ct.ResetColor()
 	heroName, err := ConsoleReader.ReadString('\n')
 	if err != nil {
 		return nil, err
@@ -85,7 +101,9 @@ func createNewPlayer(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet,
 		return nil, err
 	}
 
-	fmt.Println("That's it! You're ready to go on an adventure.")
+	ct.ChangeColor(ct.Green, true, ct.None, false)
+	fmt.Println("That's it! You're ready to go on an adventure!")
+	ct.ResetColor()
 	if err != nil {
 		return nil, err
 	}
