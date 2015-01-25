@@ -19,6 +19,33 @@ func NewGameWorld(hero *HeroSheet) *GameWorld {
 	return &GameWorld{hero, make(chan string, 10), make(chan LogEvent, 100)}
 }
 
+func (g *GameWorld) initStorage(events chan string) {
+	for event := range events {
+		if event == "You Won" {
+			g.Hero.Xp = g.Hero.Xp + 10
+			log := LogEvent {
+				"Fight: " + event,
+				int(g.Hero.Xp),
+				int(g.Hero.Life),
+				int(g.Hero.Speed),
+				int(g.Hero.Power),
+				int(g.Hero.Ancestry),
+			}
+			g.SendLog <- log
+		} else {
+			log := LogEvent {
+				"Fight: " + event,
+				int(g.Hero.Xp),
+				int(g.Hero.Life),
+				int(g.Hero.Speed),
+				int(g.Hero.Power),
+				int(g.Hero.Ancestry),
+			}
+			g.SendLog <- log
+		}
+	}
+}
+
 func (g *GameWorld) addChannel(events chan interface{}) {
 	go func() {
 		for {
