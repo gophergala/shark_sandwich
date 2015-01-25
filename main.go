@@ -25,7 +25,8 @@ func main() {
 	hero, err := InitGame(ConsoleReader, storage)
 	failOnError(err)
 
-	fmt.Println()
+	gameLog := new(GameLog)
+	gameLog.PrintGameLog()
 	fmt.Println("My Hero")
 	fmt.Println("-------")
 	fmt.Print(hero.String())
@@ -58,6 +59,8 @@ func main() {
 			fmt.Print(hero.String())
 			fmt.Println()
 			fmt.Print("Please enter command: ")
+		case "log":
+			//print log
 		case "quit", "q":
 			fmt.Println("leaving so soon?")
 			// todo: save game state

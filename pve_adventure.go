@@ -20,7 +20,7 @@ type (
 
 func NewAdventure(h *HeroSheet) *Adventure {
 	return &Adventure{
-		Type: generateAdventure(),
+		Type:      generateAdventure(),
 		HeroSheet: h,
 	}
 }
@@ -34,8 +34,18 @@ func (a *Adventure) Embark(pve *PveFight) {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
 	case ADVENTURE_TYPE_ENCOUNTER:
-		fmt.Println("A wild Snorlax appeared and you fought!")
+		fmt.Println("A wild Snorlax appeared.")
 		snorlax := NewEnemy(a.HeroSheet)
+		if snorlax.Life > a.HeroSheet.BaseStats.Life {
+			fmt.Println(" He's a tough one!")
+		}
+		if snorlax.Power > a.HeroSheet.BaseStats.Power {
+			fmt.Println(" He hits pretty hard...")
+		}
+		if snorlax.Speed > a.HeroSheet.BaseStats.Speed {
+			fmt.Println(" Faster than your average snorlax.")
+		}
+		fmt.Println("Snorlax attacks you!")
 		pve.Fight(a.HeroSheet, snorlax)
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
