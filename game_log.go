@@ -13,7 +13,7 @@ type LogEvent struct {
 	Ancestry int
 }
 
-var gameLogMem = make([]string, 10000)
+var gameLogMem = make([]string, 0)
 
 type GameLog struct {
 	recvEvents <-chan LogEvent
