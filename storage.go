@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/libgit2/git2go"
 	"io/ioutil"
 	"os"
@@ -16,11 +17,12 @@ type Event struct {
 }
 
 type Storage struct {
-	recvEvents <-chan string
-	sendEvents chan<- []string
-	repository *git.Repository
-	path       string
-	playerId   string
+	recvEvents       <-chan string
+	sendEvents       chan<- []string
+	repository       *git.Repository
+	lastCommitTreeId *git.Oid
+	path             string
+	playerId         string
 }
 
 func NewStorage() (*Storage, error) {
@@ -43,7 +45,12 @@ func (s *Storage) InitEventStream(events <-chan string) chan<- []string {
 	go func() {
 		for {
 			time.Sleep(60 * time.Second)
-			updates := s.getNewUpdates()
+			updates, err := s.getNewUpdates()
+			if err != nil {
+				fmt.Println("Error fetching new updates:" + err.Error())
+				continue
+			}
+
 			if len(updates) > 0 {
 				s.sendEvents <- updates
 			}
@@ -53,14 +60,60 @@ func (s *Storage) InitEventStream(events <-chan string) chan<- []string {
 	return s.sendEvents
 }
 
-func (s *Storage) getNewUpdates() []string {
+func (s *Storage) getNewUpdates() ([]string, error) {
 	remote, err := s.repository.LookupRemote("origin")
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	remote.Fetch([]string{"master"}, nil, "")
-	return nil
+	err = remote.Fetch([]string{"master"}, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	head, err := s.repository.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	headCommit, err := s.repository.LookupCommit(head.Target())
+	if err != nil {
+		return nil, err
+	}
+
+	headCommitTree, err := headCommit.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	lastTree, err := s.repository.LookupTree(s.lastCommitTreeId)
+	if err != nil {
+		return nil, err
+	}
+
+	diffOptions := &git.DiffOptions{
+		Pathspec: []string{s.path + "/players/" + s.playerId + "/" + s.playerId + "events"},
+	}
+	diff, err := s.repository.DiffTreeToTree(lastTree, headCommitTree, diffOptions)
+
+	lines := make([]git.DiffLine, 0)
+	err = diff.ForEach(func(file git.DiffDelta, progress float64) (git.DiffForEachHunkCallback, error) {
+		return func(hunk git.DiffHunk) (git.DiffForEachLineCallback, error) {
+			return func(line git.DiffLine) error {
+				lines = append(lines, line)
+				return nil
+			}, nil
+		}, nil
+	}, git.DiffDetailLines)
+
+	updates := make([]string, 0)
+	for _, line := range lines {
+		if line.Origin == git.DiffLineAddition {
+			updates = append(updates, line.Content)
+		}
+	}
+
+	return updates, nil
 }
 
 func (s *Storage) GetCurrentPlayer() (*HeroSheet, error) {
@@ -259,6 +312,7 @@ func (s *Storage) commitCurrentIndex(message string) error {
 		return err
 	}
 
+	s.lastCommitTreeId = treeId
 	return nil
 }
 
