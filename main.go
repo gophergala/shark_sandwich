@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func failOnError(err error) {
@@ -24,6 +23,8 @@ func main() {
 	hero, err := InitGame(ConsoleReader, storage)
 	failOnError(err)
 
+	fmt.Println("Here are your measurements")
+	fmt.Printf("%+v\n", hero)
 	fmt.Println("Reminder: You can type 'help' at any time to get a list of options.")
 	commandHelp := new(CommandHelp)
 	commandHelp.Init()
