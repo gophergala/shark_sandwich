@@ -15,7 +15,17 @@ type (
 		IsNPC bool
 		BaseStats
 	}
+
+	PveFight struct {
+		SendEvent chan interface{}
+	}
 )
+
+func NewPveFight() *PveFight {
+	return &PveFight{
+		make(chan interface{}),
+	}
+}
 
 func NewEnemy(h *HeroSheet) *NPCUnit {
 	npc := &NPCUnit{
@@ -32,7 +42,7 @@ func (n *NPCUnit) genNPCStats(h *HeroSheet) {
 	n.Speed = random(h.Speed-ENEMY_VARIANCE_SPEED, h.Speed+ENEMY_VARIANCE_SPEED)
 }
 
-func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
+func (f *PveFight) Fight(hero *HeroSheet, npc *NPCUnit) {
 	heroLife := hero.Life
 	npcLife := npc.Life
 	
@@ -45,10 +55,10 @@ func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
 	for !heroWon && !npcWon {
 		select {
 		case heroWon = <-heroWin:
-			sendEvent(FightEvent{Won: true})
+			f.SendEvent <- FightEvent{Won: true}
 			break
 		case npcWon = <-npcWin:
-				sendEvent(FightEvent{Won: false})
+			f.SendEvent <- FightEvent{Won: false}
 			break
 		case <-time.Tick(time.Duration(hero.Speed)):
 			go func() {

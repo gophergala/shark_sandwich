@@ -29,14 +29,14 @@ func generateAdventure() AdventureType {
 	return AdventureType(random(1, 3))
 }
 
-func (a *Adventure) Embark(game func(interface{})) {
+func (a *Adventure) Embark(pve *PveFight) {
 	switch a.Type {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
 	case ADVENTURE_TYPE_ENCOUNTER:
 		fmt.Println("A wild Snorlax appeared and you fought!")
 		snorlax := NewEnemy(a.HeroSheet)
-		Fight(a.HeroSheet, snorlax, game)
+		pve.Fight(a.HeroSheet, snorlax)
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
 	}
