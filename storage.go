@@ -16,33 +16,72 @@ type Event struct {
 }
 
 type Storage struct {
-	recvEvents <-chan Event
-	sendEvents chan<- Event
+	recvEvents <-chan string
+	sendEvents chan<- []string
 	repository *git.Repository
 	path       string
+	playerId   string
 }
 
 func NewStorage() (*Storage, error) {
 	storage := &Storage{
-		sendEvents: make(chan Event),
+		sendEvents: make(chan []string),
 	}
 
 	return storage, nil
 }
 
-func (s *Storage) InitEventStream(events <-chan Event) chan<- Event {
+func (s *Storage) InitEventStream(events <-chan string) chan<- []string {
 	s.recvEvents = events
+
+	go func() {
+		for event := range events {
+			s.storeEvent(event)
+		}
+	}()
+
+	go func() {
+		for {
+			time.Sleep(60 * time.Second)
+			updates := s.getNewUpdates()
+			if len(updates) > 0 {
+				s.sendEvents <- updates
+			}
+		}
+	}()
 
 	return s.sendEvents
 }
 
-func (s *Storage) GetCurrentPlayer() (string, error) {
-	contents, err := s.getFileContents(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
+func (s *Storage) getNewUpdates() []string {
+	remote, err := s.repository.LookupRemote("origin")
 	if err != nil {
-		return "", err
+		return nil
 	}
 
-	return string(contents), nil
+	remote.Fetch([]string{"master"}, nil, "")
+	return nil
+}
+
+func (s *Storage) GetCurrentPlayer() (*HeroSheet, error) {
+	playerId, err := s.getFileContents(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
+	if err != nil {
+		return nil, err
+	}
+	s.playerId = string(playerId)
+
+	contents, err := s.getFileContents(s.path + "/players/" + s.playerId + "/" + s.playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	heroSheet := HeroSheet{}
+	err = json.Unmarshal(contents, &heroSheet)
+	if err != nil {
+		return nil, err
+	}
+
+	return &heroSheet, nil
 }
 
 func (s *Storage) SetCurrentPlayer(playerId string) error {
@@ -58,6 +97,7 @@ func (s *Storage) SetCurrentPlayer(playerId string) error {
 	}
 
 	file.Sync()
+	s.playerId = playerId
 	return nil
 }
 
@@ -126,13 +166,13 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 	return s.pushLatestCommits()
 }
 
-func (s *Storage) storeEvent(event Event) error {
-	err := os.MkdirAll(s.path+"/players/"+event.PlayerId, 0755)
+func (s *Storage) storeEvent(event string) error {
+	err := os.MkdirAll(s.path+"/players/"+s.playerId, 0755)
 	if err != nil {
 		return err
 	}
 
-	filename := s.path + "/players/" + event.PlayerId + "/" + event.PlayerId + "events"
+	filename := s.path + "/players/" + s.playerId + "/" + s.playerId + "events"
 	file := &os.File{}
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		file, err = os.Create(filename)
@@ -147,39 +187,15 @@ func (s *Storage) storeEvent(event Event) error {
 	}
 	defer file.Close()
 
-	file.WriteString(event.Message + "\n")
+	file.WriteString(event + "\n")
 	file.Sync()
 
-	err = s.commitCurrentIndex("Event: " + event.Message)
+	err = s.commitCurrentIndex("Event: " + event)
 	if err != nil {
 		return err
 	}
 
 	return s.pushLatestCommits()
-}
-
-func (s *Storage) GetNewUpdates() error {
-	remote, err := s.repository.LookupRemote("origin")
-	if err != nil {
-		return err
-	}
-
-	return remote.Fetch([]string{"master"}, nil, "")
-}
-
-func (s *Storage) GetPlayer(playerId string) (*HeroSheet, error) {
-	contents, err := s.getFileContents(s.path + "/players/" + playerId + "/" + playerId)
-	if err != nil {
-		return nil, err
-	}
-
-	heroSheet := HeroSheet{}
-	err = json.Unmarshal(contents, &heroSheet)
-	if err != nil {
-		return nil, err
-	}
-
-	return &heroSheet, nil
 }
 
 func (s *Storage) GetGameObject(id string) ([]byte, error) {
