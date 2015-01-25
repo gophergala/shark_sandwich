@@ -60,7 +60,7 @@ func (a *Adventure) Embark(pve *PveFight) {
 		if enemey.Speed > a.HeroSheet.BaseStats.Speed {
 			fmt.Printf(" Faster than your average %s.\n", enemyName)
 		}
-		fmt.Printf("%s attacks you!\n", enemyName)
+		fmt.Printf("%s attacks you! Check 'log' to see the result.\n", enemyName)
 		pve.Fight(a.HeroSheet, enemey)
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
