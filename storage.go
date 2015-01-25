@@ -383,11 +383,11 @@ func (s *Storage) commitCurrentIndex(message string) error {
 }
 
 func (s *Storage) pushLatestCommits() error {
-	//remote, err := s.repository.LookupRemote("origin")
-	//if err != nil {
-	//	return err
-	//}
+	remote, err := s.repository.LookupRemote("origin")
+	if err != nil {
+		return err
+	}
 
-	//return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
+	return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
 	return nil
 }
