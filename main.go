@@ -54,6 +54,7 @@ func main() {
 	gameWorld.addChannel(pveFight.SendEvent)
 
 	// REPL
+	ct.ChangeColor(ct.Green, true, ct.None, false)
 	fmt.Print("Please enter command: ")
 	ct.ResetColor()
 	scanner := bufio.NewScanner(os.Stdin)
@@ -86,8 +87,9 @@ func main() {
 			// todo: save game state
 			os.Exit(0)
 		default:
-			fmt.Println("unknown command")
-			fmt.Print("Please enter command: ")
+			ct.ChangeColor(ct.Red, true, ct.None, false)
+			fmt.Println("Unknown command.")
+			ct.ResetColor()
 		}
 
 		ct.ChangeColor(ct.Green, true, ct.None, false)

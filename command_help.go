@@ -16,7 +16,7 @@ func (command *CommandHelp) Init() {
 	command.Line1 = "adventure\t: Set out on an adventure to find experience, loot, and random battles."
 	command.Line2 = "me\t\t: Look at your stats."
 	command.Line3 = "log\t\t: View your adventure so far."
-	command.Line4 = "quit or q\t: Quit the game :-("
+	command.Line4 = "quit\t\t: Quit the game :-("
 	command.Line5 = "help\t\t: Get command help."
 
 }
