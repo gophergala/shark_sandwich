@@ -29,7 +29,7 @@ func generateAdventure() AdventureType {
 	return AdventureType(random(1, 3))
 }
 
-func (a *Adventure) Embark(game func(Event)) {
+func (a *Adventure) Embark(game func(interface{})) {
 	switch a.Type {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
