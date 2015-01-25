@@ -1,7 +1,7 @@
 package main
 
 import (
-//"encoding/json"
+	"fmt"
 )
 
 type LogEvent struct {
@@ -12,6 +12,8 @@ type LogEvent struct {
 	Power    int
 	Ancestry int
 }
+
+var gameLogMem = make([]string, 10000)
 
 type GameLog struct {
 	recvEvents <-chan LogEvent
@@ -37,8 +39,17 @@ func NewGameLog() (*GameLog, error) {
 
 func (s *GameLog) storeLogEvent(logEvent LogEvent) {
 
+	var logString = fmt.Sprintf("%+v", logEvent)
+
+	gameLogMem = append(gameLogMem, logString)
 }
 
-func printLog() {
-	// todo: loop and print from memory structure
+func (*GameLog) PrintGameLog() {
+	fmt.Println()
+	fmt.Println("Game Log")
+	fmt.Println("--------")
+	for _, gameLog := range gameLogMem {
+		fmt.Println(gameLog)
+	}
+	fmt.Println()
 }
