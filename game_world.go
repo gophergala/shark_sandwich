@@ -11,11 +11,12 @@ type (
 	GameWorld struct {
 		Hero *HeroSheet
 		SendEvent chan string
+		SendLog chan LogEvent
 	}
 )
 
 func NewGameWorld(hero *HeroSheet) *GameWorld {
-	return &GameWorld{hero, make(chan string, 10)}
+	return &GameWorld{hero, make(chan string, 10), make(chan LogEvent, 100)}
 }
 
 func (g *GameWorld) addChannel(events chan interface{}) {
@@ -24,11 +25,20 @@ func (g *GameWorld) addChannel(events chan interface{}) {
 			e := <- events
 			switch event := e.(type) {
 			case FightEvent:
-				fmt.Printf("Fight: %s\n", event.String())
+				message := fmt.Sprintf("Fight: %s\n", event.String())
 				g.SendEvent <- event.String()
 				if event.Won {
 					g.Hero.Xp = g.Hero.Xp + 10
 				}
+				log := LogEvent {
+					message,
+					int(g.Hero.Xp),
+					int(g.Hero.Life),
+					int(g.Hero.Speed),
+					int(g.Hero.Power),
+					int(g.Hero.Ancestry),
+				}
+				g.SendLog <- log
 			}
 		}
 	}()

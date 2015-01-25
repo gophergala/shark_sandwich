@@ -35,10 +35,13 @@ func main() {
 	hero, err := InitGame(ConsoleReader, storage)
 	failOnError(err)
 
-	//gameLog := new(GameLog)
-	//gameLog.PrintGameLog()
+	gameWorld := NewGameWorld(hero)
+
+	gameLog := &GameLog{}
+	gameLog.InitLogEventStream(gameWorld.SendLog)
+	gameLog.PrintGameLog()
+	fmt.Println("My Hero")
 	ct.ChangeColor(ct.Cyan, true, ct.None, false)
-	fmt.Println("Your Hero:")
 	fmt.Println("-------")
 	fmt.Print(hero.String())
 	ct.ResetColor()
@@ -49,7 +52,6 @@ func main() {
 	commandHelp.PrintHelpCommands()
 	ct.ResetColor()
 
-	gameWorld := NewGameWorld(hero)
 	pveFight := NewPveFight()
 	gameWorld.addChannel(pveFight.SendEvent)
 
@@ -77,7 +79,8 @@ func main() {
 			fmt.Println()
 			ct.ResetColor()
 		case "log":
-			//print log
+			gameLog.PrintGameLog()
+			commandHelp.PrintHelpCommands()
 		case "quit", "q":
 			ct.ChangeColor(ct.Cyan, true, ct.None, false)
 			fmt.Println()
