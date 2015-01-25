@@ -42,7 +42,7 @@ func generateEnemy() string {
 	return names[rand.Intn(len(names))]
 }
 
-func (a *Adventure) Embark(game func(interface{})) {
+func (a *Adventure) Embark(pve *PveFight) {
 	switch a.Type {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
@@ -61,7 +61,7 @@ func (a *Adventure) Embark(game func(interface{})) {
 			fmt.Printf(" Faster than your average %s.\n", enemyName)
 		}
 		fmt.Printf("%s attacks you!\n", enemyName)
-		Fight(a.HeroSheet, enemey, game)
+		pve.Fight(a.HeroSheet, enemey)
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
 	}

@@ -7,19 +7,31 @@ type (
 		Won bool
 		Event
 	}
-	
+
+	GameWorld struct {
+		Hero *HeroSheet
+		SendEvent chan string
+	}
 )
 
-func GameWorld(hero *HeroSheet) func(interface{}) {
-	// tried to do this async with channels but not working.
-	// good enough for now
-	return func(e interface{}) {
-		switch event := e.(type) {
-		case FightEvent:
-			fmt.Printf("Fight: %s\n", event.String())
-			hero.Xp = hero.Xp + 10
+func NewGameWorld(hero *HeroSheet) *GameWorld {
+	return &GameWorld{hero, make(chan string, 10)}
+}
+
+func (g *GameWorld) addChannel(events chan interface{}) {
+	go func() {
+		for {
+			e := <- events
+			switch event := e.(type) {
+			case FightEvent:
+				fmt.Printf("Fight: %s\n", event.String())
+				g.SendEvent <- event.String()
+				if event.Won {
+					g.Hero.Xp = g.Hero.Xp + 10
+				}
+			}
 		}
-	}
+	}()
 }
 
 func (f *FightEvent) String() string {
