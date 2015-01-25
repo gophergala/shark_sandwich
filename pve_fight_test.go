@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -23,6 +24,18 @@ func TestEnemyGenStats(t *testing.T) {
 }
 
 func TestFight(t *testing.T) {
-	t.Log("Too peaceful...")
-	t.Fail()
+	h := NewHero("Spinal Tap")
+	e := NewEnemy(h)
+	called := false
+
+	callback := func(e interface{}) {
+		called = true
+	}
+
+	Fight(h, e, callback)
+
+	if called == false {
+		t.Log("The fight did not complete")
+		t.Fail()
+	}
 }
