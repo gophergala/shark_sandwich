@@ -16,3 +16,5 @@ An external git repo has been created on Google cloud compute instance for this 
 * Then it will ask you for a name. Enter whatever you want here.
 
 The game should not be setup to play. When you run it later, you can enter the same folder path `testgame`, or if you run the game from within the `testgame` folder, it will load up straight away. You previously created character will be remembered.
+
+Run `resetgame.sh` script to clear out repo.
