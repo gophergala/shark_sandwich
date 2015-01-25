@@ -53,11 +53,7 @@ func main() {
 			fmt.Print(hero.String())
 			fmt.Println()
 			fmt.Print("Please enter command: ")
-		case "quit":
-			fmt.Println("leaving so soon?")
-			// todo: save game state
-			os.Exit(0)
-		case "q":
+		case "quit", "q":
 			fmt.Println("leaving so soon?")
 			// todo: save game state
 			os.Exit(0)

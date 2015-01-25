@@ -5,6 +5,7 @@ import (
 	"github.com/libgit2/git2go"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 const CURRENT_PLAYER_CONFIG_KEY string = "current.game.player"
@@ -122,13 +123,12 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 	}
 
 	file.Sync()
-	return nil
-	//return s.commitCurrentIndex()
-	//if err != nil {
-	//	return err
-	//}
+	err = s.commitCurrentIndex("Added new player: " + hero.Name)
+	if err != nil {
+		return err
+	}
 
-	//return s.pushLatestCommits()
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) storeEvent(event Event) error {
@@ -153,14 +153,12 @@ func (s *Storage) storeEvent(event Event) error {
 	defer file.Close()
 
 	file.WriteString(event.Message + "\n")
+	err = s.commitCurrentIndex("Event: " + event.Message)
+	if err != nil {
+		return err
+	}
 
-	return nil
-	//return s.commitCurrentIndex()
-	//if err != nil {
-	//	return err
-	//}
-
-	//return s.pushLatestCommits()
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) GetNewUpdates() error {
@@ -201,7 +199,13 @@ func (s *Storage) getFileContents(filename string) ([]byte, error) {
 	return contents, err
 }
 
-func (s *Storage) commitCurrentIndex() error {
+func (s *Storage) commitCurrentIndex(message string) error {
+	signature := &git.Signature{
+		Name:  "shark_sandwich_engine",
+		Email: "shark@sandwich.com",
+		When:  time.Now(),
+	}
+
 	index, err := s.repository.Index()
 	if err != nil {
 		return err
@@ -212,7 +216,32 @@ func (s *Storage) commitCurrentIndex() error {
 		return err
 	}
 
-	_, err = index.WriteTreeTo(s.repository)
+	treeId, err := index.WriteTree()
+	if err != nil {
+		return err
+	}
+
+	err = index.Write()
+	if err != nil {
+		return err
+	}
+
+	tree, err := s.repository.LookupTree(treeId)
+	if err != nil {
+		return err
+	}
+
+	head, err := s.repository.Head()
+	if err != nil {
+		return err
+	}
+
+	commitTarget, err := s.repository.LookupCommit(head.Target())
+	if err != nil {
+		return err
+	}
+
+	_, err = s.repository.CreateCommit("HEAD", signature, signature, message, tree, commitTarget)
 	if err != nil {
 		return err
 	}
@@ -226,5 +255,6 @@ func (s *Storage) pushLatestCommits() error {
 		return err
 	}
 
-	return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
+	//return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
+	return nil
 }

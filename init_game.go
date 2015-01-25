@@ -29,8 +29,8 @@ func InitGame(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error)
 		}
 	}
 
-	playerId, err := storage.GetCurrentPlayer()
 	hero := &HeroSheet{}
+	playerId, err := storage.GetCurrentPlayer()
 	if err != nil {
 		hero, err = createNewPlayer(ConsoleReader, storage)
 		if err != nil {
