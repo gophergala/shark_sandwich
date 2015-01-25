@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const CURRENT_PLAYER_CONFIG_KEY string = "current.game.player"
+const CURRENT_PLAYER_CONFIG_KEY string = "current_game_player"
 
 type Event struct {
 	PlayerId string
@@ -19,22 +19,11 @@ type Storage struct {
 	Events     <-chan Event
 	repository *git.Repository
 	path       string
-	config     *git.Config
 }
 
 func NewStorage() (*Storage, error) {
-	configPath, err := git.ConfigFindGlobal()
-	if err != nil {
-		return nil, err
-	}
-	config, err := git.OpenOndisk(nil, configPath)
-	if err != nil {
-		return nil, err
-	}
-
 	storage := &Storage{
 		Events: make(chan Event),
-		config: config,
 	}
 	storage.initEventStream()
 
@@ -50,19 +39,27 @@ func (s *Storage) initEventStream() {
 }
 
 func (s *Storage) GetCurrentPlayer() (string, error) {
-	val, err := s.config.LookupString(CURRENT_PLAYER_CONFIG_KEY)
+	contents, err := s.getFileContents(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
 	if err != nil {
 		return "", err
 	}
 
-	return val, nil
+	return string(contents), nil
 }
 
 func (s *Storage) SetCurrentPlayer(playerId string) error {
-	if err := s.config.SetString(CURRENT_PLAYER_CONFIG_KEY, playerId); err != nil {
+	file, err := os.Create(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(playerId)
+	if err != nil {
 		return err
 	}
 
+	file.Sync()
 	return nil
 }
 
@@ -153,6 +150,8 @@ func (s *Storage) storeEvent(event Event) error {
 	defer file.Close()
 
 	file.WriteString(event.Message + "\n")
+	file.Sync()
+
 	err = s.commitCurrentIndex("Event: " + event.Message)
 	if err != nil {
 		return err
@@ -250,10 +249,10 @@ func (s *Storage) commitCurrentIndex(message string) error {
 }
 
 func (s *Storage) pushLatestCommits() error {
-	remote, err := s.repository.LookupRemote("origin")
-	if err != nil {
-		return err
-	}
+	//remote, err := s.repository.LookupRemote("origin")
+	//if err != nil {
+	//	return err
+	//}
 
 	//return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
 	return nil
