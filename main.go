@@ -14,7 +14,9 @@ func failOnError(err error) {
 }
 
 func main() {
+	fmt.Println()
 	fmt.Println("Welcome to shark_sandwich!")
+	fmt.Println()
 
 	ConsoleReader := bufio.NewReader(os.Stdin)
 	storage, err := NewStorage()
@@ -23,26 +25,45 @@ func main() {
 	hero, err := InitGame(ConsoleReader, storage)
 	failOnError(err)
 
-	fmt.Println("Here are your measurements")
-	fmt.Printf("%+v\n", hero)
-	fmt.Println("Reminder: You can type 'help' at any time to get a list of options.")
+	fmt.Println()
+	fmt.Println("My Hero")
+	fmt.Println("-------")
+	fmt.Print(hero.String())
 	commandHelp := new(CommandHelp)
 	commandHelp.Init()
 	commandHelp.PrintHelpCommands()
 
-	// todo: repl loop to deal with commands
+	// REPL
 	fmt.Print("Please enter command: ")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "quit" || line == "q" {
-			break
-		}
-		fmt.Print("Please enter command: ")
-		// do something with the command in a switch statement
-	}
-}
+		command := scanner.Text()
 
-func printCommands() {
-	fmt.Println()
+		switch command {
+		case "adventure":
+			// todo: call adventure code and pass in channel to recieve game engine messages
+			// todo: don't allow user to enter new command until adventure outcome is done (wait on event?)
+			fmt.Println("... going on an adventure ...")
+			fmt.Print("Please enter command: ")
+		case "help":
+			commandHelp.PrintHelpCommands()
+			fmt.Print("Please enter command: ")
+		case "me":
+			fmt.Println("My Hero")
+			fmt.Print(hero.String())
+			fmt.Println()
+			fmt.Print("Please enter command: ")
+		case "quit":
+			fmt.Println("leaving so soon?")
+			// todo: save game state
+			os.Exit(0)
+		case "q":
+			fmt.Println("leaving so soon?")
+			// todo: save game state
+			os.Exit(0)
+		default:
+			fmt.Println("unknown command")
+			fmt.Print("Please enter command: ")
+		}
+	}
 }
