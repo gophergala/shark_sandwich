@@ -27,6 +27,7 @@ type (
 		Life  int64
 		Speed int64
 		Power int64
+		Xp    int64
 	}
 	HeroSheet struct {
 		Ancestry int64
@@ -57,10 +58,11 @@ func random(min, max int64) int64 {
 }
 
 func (h *HeroSheet) String() string {
-	s := fmt.Sprintf("\n\tName: %v\n\tLife: %v\n\tPower: %v\n\tSpeed: %v\n",
+	s := fmt.Sprintf("\n\tName: %v\n\tLife: %v\n\tPower: %v\n\tSpeed: %v\n\tXP: %v\n",
 		h.BaseStats.Name,
 		h.BaseStats.Life,
 		h.BaseStats.Power,
-		h.BaseStats.Speed)
+		h.BaseStats.Speed,
+		h.BaseStats.Xp)
 	return s
 }

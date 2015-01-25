@@ -33,6 +33,7 @@ func main() {
 	commandHelp.Init()
 	commandHelp.PrintHelpCommands()
 
+	game := GameWorld(hero)
 	// REPL
 	fmt.Print("Please enter command: ")
 	scanner := bufio.NewScanner(os.Stdin)
@@ -41,9 +42,10 @@ func main() {
 
 		switch command {
 		case "adventure":
+			a := NewAdventure(hero)
+			a.Embark(game)
 			// todo: call adventure code and pass in channel to recieve game engine messages
 			// todo: don't allow user to enter new command until adventure outcome is done (wait on event?)
-			fmt.Println("... going on an adventure ...")
 			fmt.Print("Please enter command: ")
 		case "help":
 			commandHelp.PrintHelpCommands()
