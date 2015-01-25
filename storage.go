@@ -78,7 +78,7 @@ func (s *Storage) OpenRepository(path string) error {
 
 func (s *Storage) CloneRepository(repoUrl string, path string) error {
 	checkoutOptions := &git.CheckoutOpts{
-		Strategy: git.CheckoutSafe,
+		Strategy: git.CheckoutSafeCreate,
 	}
 	cloneOptions := &git.CloneOptions{
 		Bare:           false,
@@ -172,19 +172,19 @@ func (s *Storage) GetNewUpdates() error {
 	return remote.Fetch([]string{"master"}, nil, "")
 }
 
-func (s *Storage) GetPlayer(playerId string) (HeroSheet, error) {
+func (s *Storage) GetPlayer(playerId string) (*HeroSheet, error) {
 	contents, err := s.getFileContents(s.path + "/players/" + playerId + "/" + playerId)
 	if err != nil {
-		return HeroSheet{}, err
+		return nil, err
 	}
 
 	heroSheet := HeroSheet{}
 	err = json.Unmarshal(contents, &heroSheet)
 	if err != nil {
-		return HeroSheet{}, err
+		return nil, err
 	}
 
-	return heroSheet, nil
+	return &heroSheet, nil
 }
 
 func (s *Storage) GetGameObject(id string) ([]byte, error) {

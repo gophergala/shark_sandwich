@@ -21,7 +21,7 @@ func InitGame(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error)
 		}
 	}
 
-	_, err = storage.GetGameObject("shark_sandwich_game_data")
+	_, err = storage.GetGameObject("shark_sandwich_game")
 	if err != nil {
 		err = loadGame(ConsoleReader, storage)
 		if err != nil {
@@ -30,37 +30,20 @@ func InitGame(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error)
 	}
 
 	playerId, err := storage.GetCurrentPlayer()
+	hero := &HeroSheet{}
 	if err != nil {
-		fmt.Print("Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
-		heroName, err := ConsoleReader.ReadString('\n')
+		hero, err = createNewPlayer(ConsoleReader, storage)
 		if err != nil {
 			return nil, err
 		}
-
-		playerId = strings.TrimSpace(heroName)
-		hero := NewHero(playerId)
-		err = storage.StorePlayer(*hero)
-		if err != nil {
-			return nil, err
-		}
-
-		err = storage.SetCurrentPlayer(playerId)
-		if err != nil {
-			return nil, err
-		}
-
-		fmt.Println("That's it! You're ready to go on an adventure.")
+	} else {
+		hero, err = storage.GetPlayer(playerId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	hero, err := storage.GetPlayer(playerId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &hero, nil
+	return hero, nil
 }
 
 func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
@@ -87,4 +70,31 @@ func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
 	}
 
 	return nil
+}
+
+func createNewPlayer(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error) {
+	fmt.Print("Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
+	heroName, err := ConsoleReader.ReadString('\n')
+	if err != nil {
+		return nil, err
+	}
+
+	playerId := strings.TrimSpace(heroName)
+	hero := NewHero(playerId)
+	err = storage.StorePlayer(*hero)
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.SetCurrentPlayer(playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("That's it! You're ready to go on an adventure.")
+	if err != nil {
+		return nil, err
+	}
+
+	return hero, nil
 }
