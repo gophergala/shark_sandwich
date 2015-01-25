@@ -1,40 +1,49 @@
 package main
 
 import (
-	"github.com/nsf/termbox-go"
+	"bufio"
+	"fmt"
+	"os"
 )
 
 func main() {
-	err := termbox.Init()
+	ConsoleReader := bufio.NewReader(os.Stdin)
+	storage := NewStorage()
+
+	// todo: should be prompted to load an existing hero here as well
+	fmt.Print("Welcome to shark_sandwich! Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
+	heroName, err := ConsoleReader.ReadString('\n')
+
 	if err != nil {
-		panic(err)
-	}
-	defer termbox.Close()
-
-	termWidth, termHeight := termbox.Size()
-
-	termbox.SetInputMode(termbox.InputEsc)
-	termbox.SetOutputMode(termbox.OutputNormal)
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-
-	for x := 0; x < termWidth; x++ {
-		termbox.SetCell(x, 0, ' ', termbox.ColorGreen, termbox.ColorCyan)
-		termbox.SetCell(x, termHeight - 1, ' ', termbox.ColorGreen, termbox.ColorCyan)
-	}
-	for y := 0; y < termHeight; y++ {
-		termbox.SetCell(0, y, ' ', termbox.ColorGreen, termbox.ColorCyan)
-		termbox.SetCell(termWidth - 1, y, ' ', termbox.ColorGreen, termbox.ColorCyan)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	print_tb((termWidth / 2) - 10, (termHeight / 2) - 5, termbox.ColorWhite, termbox.ColorDefault, "Welcome to the Game!")
-	print_tb((termWidth / 2) - 11, (termHeight / 2), termbox.ColorWhite, termbox.ColorDefault, "Press any key to exit.")
-	termbox.Flush()
-	termbox.PollEvent()
+	hero := NewHero(heroName)
+	storage.StorePlayer(*hero)
+
+	fmt.Println("That's it! You're ready to go on an adventure.")
+	fmt.Println("Here are your measurements")
+	fmt.Printf("%+v\n", hero)
+
+	fmt.Println("Reminder: You can type 'help' at any time to get a list of options.")
+	commandHelp := new(CommandHelp)
+	commandHelp.Init()
+	commandHelp.PrintHelpCommands()
+
+	// todo: repl loop to deal with commands
+	fmt.Print("Please enter command: ")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		fmt.Print("Please enter command: ")
+		line := scanner.Text()
+		if line == "quit" {
+			break
+		}
+		// do something with the command in a switch statement
+	}
 }
 
-func print_tb(x, y int, fg, bg termbox.Attribute, msg string) {
-	for _, c := range msg {
-		termbox.SetCell(x, y, c, fg, bg)
-		x++
-	}
+func printCommands() {
+	fmt.Println()
 }
