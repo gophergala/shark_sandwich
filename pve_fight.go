@@ -32,7 +32,7 @@ func (n *NPCUnit) genNPCStats(h *HeroSheet) {
 	n.Speed = random(h.Speed-ENEMY_VARIANCE_SPEED, h.Speed+ENEMY_VARIANCE_SPEED)
 }
 
-func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
+func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e Event)) {
 	heroLife := hero.Life
 	npcLife := npc.Life
 
@@ -45,10 +45,10 @@ func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
 	for !heroWon && !npcWon {
 		select {
 		case heroWon = <-heroWin:
-			sendEvent("Hero Wins")
+			sendEvent(Event{hero.Name, "Won Fight"})
 			break
 		case npcWon = <-npcWin:
-			sendEvent("NPC Wins")
+			sendEvent(Event{hero.Name, "Lost Fight"})
 			break
 		case <-time.Tick(time.Duration(hero.Speed)):
 			go func() {
