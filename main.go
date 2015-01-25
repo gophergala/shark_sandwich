@@ -39,7 +39,6 @@ func main() {
 
 	gameLog := &GameLog{}
 	gameLog.InitLogEventStream(gameWorld.SendLog)
-	gameLog.PrintGameLog()
 	fmt.Println("My Hero")
 	ct.ChangeColor(ct.Cyan, true, ct.None, false)
 	fmt.Println("-------")
