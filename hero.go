@@ -30,7 +30,9 @@ type (
 		Xp    int64
 	}
 	HeroSheet struct {
-		Ancestry int64
+		Ancestry      int64
+		OriginalStats BaseStats
+		Snapshot      BaseStats
 		BaseStats
 	}
 )
@@ -40,16 +42,26 @@ func NewHero(name string) *HeroSheet {
 		BaseStats: BaseStats{
 			Name: name,
 		},
-		Ancestry: 1,
+		OriginalStats: BaseStats{},
+		Snapshot:      BaseStats{},
+		Ancestry:      1,
 	}
 	hero.genStats()
 	return hero
 }
 
 func (h *HeroSheet) genStats() {
-	h.BaseStats.Life = random(HERO_MIN_LIFE, HERO_MAX_LIFE)
-	h.BaseStats.Power = random(HERO_MIN_POWER, HERO_MAX_POWER)
-	h.BaseStats.Speed = random(HERO_MIN_SPEED, HERO_MAX_SPEED)
+	h.OriginalStats.Life = random(HERO_MIN_LIFE, HERO_MAX_LIFE)
+	h.OriginalStats.Power = random(HERO_MIN_POWER, HERO_MAX_POWER)
+	h.OriginalStats.Speed = random(HERO_MIN_SPEED, HERO_MAX_SPEED)
+
+	h.BaseStats.Life = h.OriginalStats.Life
+	h.BaseStats.Power = h.OriginalStats.Power
+	h.BaseStats.Speed = h.OriginalStats.Speed
+
+	h.Snapshot.Life = h.OriginalStats.Life
+	h.Snapshot.Power = h.OriginalStats.Power
+	h.Snapshot.Speed = h.OriginalStats.Speed
 }
 
 func random(min, max int64) int64 {
