@@ -62,7 +62,8 @@ func main() {
 			fmt.Println()
 			fmt.Print("Please enter command: ")
 		case "log":
-			//print log
+			gameLog.PrintGameLog()
+			commandHelp.PrintHelpCommands()
 		case "quit", "q":
 			fmt.Println("leaving so soon?")
 			// todo: save game state
