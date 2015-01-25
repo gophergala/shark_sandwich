@@ -9,42 +9,82 @@ import (
 
 func InitGame(ConsoleReader *bufio.Reader, storage *Storage) (*HeroSheet, error) {
 	dir, err := os.Getwd()
-	failOnError(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = storage.OpenRepository(dir)
 	if err != nil {
-		loadGame(ConsoleReader, storage)
+		err = loadGame(ConsoleReader, storage)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// todo: should be prompted to load an existing hero here as well
-	fmt.Print("Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
-	heroName, err := ConsoleReader.ReadString('\n')
-	failOnError(err)
+	_, err = storage.GetGameObject("shark_sandwich_game_data")
+	if err != nil {
+		err = loadGame(ConsoleReader, storage)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	heroName = strings.TrimSpace(heroName)
-	hero := NewHero(heroName)
-	err = storage.StorePlayer(*hero)
-	failOnError(err)
+	playerId, err := storage.GetCurrentPlayer()
+	if err != nil {
+		fmt.Print("Looks like you're new. Tell us about your hero so you can get started. What's your name? ")
+		heroName, err := ConsoleReader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
 
-	fmt.Println("That's it! You're ready to go on an adventure.")
-	fmt.Println("Here are your measurements")
-	fmt.Printf("%+v\n", hero)
+		playerId = strings.TrimSpace(heroName)
+		hero := NewHero(playerId)
+		err = storage.StorePlayer(*hero)
+		if err != nil {
+			return nil, err
+		}
+
+		err = storage.SetCurrentPlayer(playerId)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println("That's it! You're ready to go on an adventure.")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	hero, err := storage.GetPlayer(playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &hero, nil
 }
 
-func loadGame(ConsoleReader *bufio.Reader, storage *Storage) {
+func loadGame(ConsoleReader *bufio.Reader, storage *Storage) error {
 	fmt.Print("There is not a current game in this folder. Please enter a folder location to play the game in: ")
 	folderPath, err := ConsoleReader.ReadString('\n')
-	failOnError(err)
+	if err != nil {
+		return err
+	}
 
 	folderPath = strings.TrimSpace(folderPath)
 	err = storage.OpenRepository(folderPath)
 	if err != nil {
 		fmt.Print("There is not a current game in this folder. Please enter a remote url to load a game: ")
 		remoteUrl, err := ConsoleReader.ReadString('\n')
-		failOnError(err)
+		if err != nil {
+			return err
+		}
 
 		remoteUrl = strings.TrimSpace(remoteUrl)
 		err = storage.CloneRepository(remoteUrl, folderPath)
-		failOnError(err)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

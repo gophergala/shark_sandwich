@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const CURRENT_PLAYER_CONFIG_KEY string = "current_game_player"
+const CURRENT_PLAYER_CONFIG_KEY string = "current.game.player"
 
 type Event struct {
 	PlayerId string
@@ -98,12 +98,13 @@ func (s *Storage) CloneRepository(repoUrl string, path string) error {
 }
 
 func (s *Storage) StorePlayer(hero HeroSheet) error {
-	err := os.MkdirAll(s.path+"/players/"+hero.Name, 0755)
+	filepath := s.path + "/players/" + hero.Name
+	err := os.MkdirAll(filepath, 0755)
 	if err != nil {
 		return err
 	}
 
-	filename := s.path + "/players/" + hero.Name + "/" + hero.Name
+	filename := filepath + "/" + hero.Name
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -115,14 +116,14 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 		return err
 	}
 
-	_, err = file.WriteString(string(heroBytes))
+	_, err = file.WriteString(string(heroBytes) + "\n")
 	if err != nil {
 		return err
 	}
 
 	file.Sync()
-
-	return s.commitCurrentIndex()
+	return nil
+	//return s.commitCurrentIndex()
 	//if err != nil {
 	//	return err
 	//}
@@ -153,7 +154,8 @@ func (s *Storage) storeEvent(event Event) error {
 
 	file.WriteString(event.Message + "\n")
 
-	return s.commitCurrentIndex()
+	return nil
+	//return s.commitCurrentIndex()
 	//if err != nil {
 	//	return err
 	//}
