@@ -17,12 +17,13 @@ type (
 	}
 )
 
-func NewEnemy(h *HeroSheet) *NPCUnit {
+func NewEnemy(h *HeroSheet, name string) *NPCUnit {
 	npc := &NPCUnit{
 		IsNPC: true,
 	}
 
 	npc.genNPCStats(h)
+	npc.BaseStats.Name = name
 	return npc
 }
 
@@ -35,7 +36,7 @@ func (n *NPCUnit) genNPCStats(h *HeroSheet) {
 func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
 	heroLife := hero.Life
 	npcLife := npc.Life
-	
+
 	heroWin := make(chan bool, 1)
 	npcWin := make(chan bool, 1)
 
@@ -48,7 +49,7 @@ func Fight(hero *HeroSheet, npc *NPCUnit, sendEvent func(e interface{})) {
 			sendEvent(FightEvent{Won: true})
 			break
 		case npcWon = <-npcWin:
-				sendEvent(FightEvent{Won: false})
+			sendEvent(FightEvent{Won: false})
 			break
 		case <-time.Tick(time.Duration(hero.Speed)):
 			go func() {
