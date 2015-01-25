@@ -16,26 +16,24 @@ type Event struct {
 }
 
 type Storage struct {
-	Events     <-chan Event
+	recvEvents <-chan Event
+	sendEvents chan<- Event
 	repository *git.Repository
 	path       string
 }
 
 func NewStorage() (*Storage, error) {
 	storage := &Storage{
-		Events: make(chan Event),
+		sendEvents: make(chan Event),
 	}
-	storage.initEventStream()
 
 	return storage, nil
 }
 
-func (s *Storage) initEventStream() {
-	go func() {
-		for event := range s.Events {
-			s.storeEvent(event)
-		}
-	}()
+func (s *Storage) InitEventStream(events <-chan Event) chan<- Event {
+	s.recvEvents = events
+
+	return s.sendEvents
 }
 
 func (s *Storage) GetCurrentPlayer() (string, error) {
