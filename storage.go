@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/libgit2/git2go"
@@ -18,7 +19,7 @@ type Event struct {
 
 type Storage struct {
 	recvEvents       <-chan string
-	sendEvents       chan<- []string
+	sendEvents       chan string
 	repository       *git.Repository
 	lastCommitTreeId *git.Oid
 	path             string
@@ -27,13 +28,13 @@ type Storage struct {
 
 func NewStorage() (*Storage, error) {
 	storage := &Storage{
-		sendEvents: make(chan []string),
+		sendEvents: make(chan string),
 	}
 
 	return storage, nil
 }
 
-func (s *Storage) InitEventStream(events <-chan string) chan<- []string {
+func (s *Storage) InitEventStream(events <-chan string) chan string {
 	s.recvEvents = events
 
 	go func() {
@@ -42,19 +43,37 @@ func (s *Storage) InitEventStream(events <-chan string) chan<- []string {
 		}
 	}()
 
-	go func() {
-		for {
-			time.Sleep(60 * time.Second)
-			updates, err := s.getNewUpdates()
-			if err != nil {
-				fmt.Println("Error fetching new updates:" + err.Error())
-				continue
-			}
+	// This is the code that runs the background update process. Leaving commented out since it wont be complete for the hackathon deadline
+	//go func() {
+	//	for {
+	//		time.Sleep(20 * time.Second)
+	//		updates, err := s.getNewUpdates()
+	//		if err != nil {
+	//			continue
+	//		}
 
-			if len(updates) > 0 {
-				s.sendEvents <- updates
-			}
+	//		if len(updates) > 0 {
+	//			s.sendEvents <- updates
+	//		}
+	//	}
+	//}()
+
+	go func() {
+		file, err := os.Open(s.path + "/players/" + s.playerId + "/" + s.playerId + "events")
+		if err != nil {
+			close(s.sendEvents)
+			return
 		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			s.sendEvents <- scanner.Text()
+		}
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error reading event stream: " + err.Error())
+		}
+		close(s.sendEvents)
 	}()
 
 	return s.sendEvents
@@ -70,6 +89,21 @@ func (s *Storage) getNewUpdates() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	//originMaster, err := s.repository.LookupReference("refs/remotes/origin/master")
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//mergeHead, err := s.repository.AnnotatedCommitFromRef(originMaster)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//mergeHeads := make([]*git.AnnotatedCommit, 1)
+	//mergeHeads[0] = mergeHead
+	//err = s.repository.Merge(mergeHeads, nil, nil)
+	//fmt.Println("updates merged")
 
 	head, err := s.repository.Head()
 	if err != nil {
@@ -159,8 +193,14 @@ func (s *Storage) OpenRepository(path string) error {
 	if err != nil {
 		return err
 	}
+
 	s.repository = repo
 	s.path = path
+
+	err = s.setLastCommitTree()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -179,10 +219,36 @@ func (s *Storage) CloneRepository(repoUrl string, path string) error {
 	if err != nil {
 		return err
 	}
+
 	repo.CreateRemote("origin", path)
 	s.repository = repo
 	s.path = path
 
+	err = s.setLastCommitTree()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) setLastCommitTree() error {
+	head, err := s.repository.Head()
+	if err != nil {
+		return err
+	}
+
+	headCommit, err := s.repository.LookupCommit(head.Target())
+	if err != nil {
+		return err
+	}
+
+	headCommitTree, err := headCommit.Tree()
+	if err != nil {
+		return err
+	}
+
+	s.lastCommitTreeId = headCommitTree.Id()
 	return nil
 }
 
