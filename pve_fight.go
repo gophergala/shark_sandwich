@@ -27,12 +27,13 @@ func NewPveFight() *PveFight {
 	}
 }
 
-func NewEnemy(h *HeroSheet) *NPCUnit {
+func NewEnemy(h *HeroSheet, name string) *NPCUnit {
 	npc := &NPCUnit{
 		IsNPC: true,
 	}
 
 	npc.genNPCStats(h)
+	npc.BaseStats.Name = name
 	return npc
 }
 
@@ -45,7 +46,7 @@ func (n *NPCUnit) genNPCStats(h *HeroSheet) {
 func (f *PveFight) Fight(hero *HeroSheet, npc *NPCUnit) {
 	heroLife := hero.Life
 	npcLife := npc.Life
-	
+
 	heroWin := make(chan bool, 1)
 	npcWin := make(chan bool, 1)
 

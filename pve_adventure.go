@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 const (
@@ -29,24 +30,38 @@ func generateAdventure() AdventureType {
 	return AdventureType(random(1, 3))
 }
 
+func generateEnemy() string {
+	names := []string{
+		"Snorlax",
+		"Bear",
+		"Goblin",
+		"Hill Giant",
+		"Shark out of water",
+	}
+
+	return names[rand.Intn(len(names))]
+}
+
 func (a *Adventure) Embark(pve *PveFight) {
 	switch a.Type {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
 	case ADVENTURE_TYPE_ENCOUNTER:
-		fmt.Println("A wild Snorlax appeared.")
-		snorlax := NewEnemy(a.HeroSheet)
-		if snorlax.Life > a.HeroSheet.BaseStats.Life {
-			fmt.Println(" He's a tough one!")
+		enemyName := generateEnemy()
+		fmt.Printf("A wild %s appeared.\n", enemyName)
+		enemey := NewEnemy(a.HeroSheet, enemyName)
+
+		if enemey.Life > a.HeroSheet.BaseStats.Life {
+			fmt.Println(" It's a tough one!")
 		}
-		if snorlax.Power > a.HeroSheet.BaseStats.Power {
-			fmt.Println(" He hits pretty hard...")
+		if enemey.Power > a.HeroSheet.BaseStats.Power {
+			fmt.Println(" It hits pretty hard...")
 		}
-		if snorlax.Speed > a.HeroSheet.BaseStats.Speed {
-			fmt.Println(" Faster than your average snorlax.")
+		if enemey.Speed > a.HeroSheet.BaseStats.Speed {
+			fmt.Printf(" Faster than your average %s.\n", enemyName)
 		}
-		fmt.Println("Snorlax attacks you!")
-		pve.Fight(a.HeroSheet, snorlax)
+		fmt.Printf("%s attacks you!\n", enemyName)
+		pve.Fight(a.HeroSheet, enemey)
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
 	}
