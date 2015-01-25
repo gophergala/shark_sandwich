@@ -3,17 +3,27 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 	"os"
+	"os/exec"
+	"runtime"
 )
 
 func failOnError(err error) {
 	if err != nil {
+		ct.ChangeColor(ct.Red, true, ct.None, false)
 		fmt.Println(err)
+		ct.ResetColor()
 		os.Exit(1)
 	}
 }
 
 func main() {
+	defer ct.ResetColor()
+	ClearScreen()
+
+	ct.ChangeColor(ct.Green, true, ct.None, false)
+
 	fmt.Println()
 	fmt.Println("Welcome to shark_sandwich!")
 	fmt.Println()
@@ -31,17 +41,23 @@ func main() {
 	gameLog.InitLogEventStream(gameWorld.SendLog)
 	gameLog.PrintGameLog()
 	fmt.Println("My Hero")
+	ct.ChangeColor(ct.Cyan, true, ct.None, false)
 	fmt.Println("-------")
 	fmt.Print(hero.String())
+	ct.ResetColor()
+
 	commandHelp := new(CommandHelp)
 	commandHelp.Init()
+	ct.ChangeColor(ct.Green, true, ct.None, false)
 	commandHelp.PrintHelpCommands()
+	ct.ResetColor()
 
 	pveFight := NewPveFight()
 	gameWorld.addChannel(pveFight.SendEvent)
-		
+
 	// REPL
 	fmt.Print("Please enter command: ")
+	ct.ResetColor()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		command := scanner.Text()
@@ -52,25 +68,46 @@ func main() {
 			a.Embark(pveFight)
 			// todo: call adventure code and pass in channel to recieve game engine messages
 			// todo: don't allow user to enter new command until adventure outcome is done (wait on event?)
-			fmt.Print("Please enter command: ")
 		case "help":
+			ct.ChangeColor(ct.Green, true, ct.None, false)
 			commandHelp.PrintHelpCommands()
-			fmt.Print("Please enter command: ")
 		case "me":
-			fmt.Println("My Hero")
+			ct.ChangeColor(ct.Cyan, true, ct.None, false)
+			fmt.Println("Your Hero:")
 			fmt.Print(hero.String())
 			fmt.Println()
-			fmt.Print("Please enter command: ")
+			ct.ResetColor()
 		case "log":
 			gameLog.PrintGameLog()
 			commandHelp.PrintHelpCommands()
 		case "quit", "q":
-			fmt.Println("leaving so soon?")
+			ct.ChangeColor(ct.Cyan, true, ct.None, false)
+			fmt.Println()
+			fmt.Println("Leaving already?? Come back soon!")
+			fmt.Println()
+			ct.ResetColor()
 			// todo: save game state
 			os.Exit(0)
 		default:
 			fmt.Println("unknown command")
 			fmt.Print("Please enter command: ")
 		}
+
+		ct.ChangeColor(ct.Green, true, ct.None, false)
+		fmt.Print("Please enter command: ")
+		ct.ResetColor()
+	}
+}
+
+func ClearScreen() {
+	switch runtime.GOOS {
+	case "linux", "darwin":
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	case "windows":
+		cmd := exec.Command("cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
 	}
 }
