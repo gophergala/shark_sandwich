@@ -21,7 +21,7 @@ func NewAdventure(h *HeroSheet) *Adventure {
 	}
 }
 
-func (a *Adventure) generateAdventure() (error, AdventureType) {
+func generateAdventure() AdventureType {
 	return AdventureType(random(1, 3))
 }
 
