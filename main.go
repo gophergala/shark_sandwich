@@ -25,7 +25,10 @@ func main() {
 	hero, err := InitGame(ConsoleReader, storage)
 	failOnError(err)
 
-	gameLog := new(GameLog)
+	gameWorld := NewGameWorld(hero)
+
+	gameLog := &GameLog{}
+	gameLog.InitLogEventStream(gameWorld.SendLog)
 	gameLog.PrintGameLog()
 	fmt.Println("My Hero")
 	fmt.Println("-------")
@@ -34,7 +37,6 @@ func main() {
 	commandHelp.Init()
 	commandHelp.PrintHelpCommands()
 
-	gameWorld := NewGameWorld(hero)
 	pveFight := NewPveFight()
 	gameWorld.addChannel(pveFight.SendEvent)
 		
