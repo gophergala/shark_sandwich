@@ -5,9 +5,10 @@ import (
 	"github.com/libgit2/git2go"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
-const CURRENT_PLAYER_CONFIG_KEY string = "current.game.player"
+const CURRENT_PLAYER_CONFIG_KEY string = "current_game_player"
 
 type Event struct {
 	PlayerId string
@@ -18,22 +19,11 @@ type Storage struct {
 	Events     <-chan Event
 	repository *git.Repository
 	path       string
-	config     *git.Config
 }
 
 func NewStorage() (*Storage, error) {
-	configPath, err := git.ConfigFindGlobal()
-	if err != nil {
-		return nil, err
-	}
-	config, err := git.OpenOndisk(nil, configPath)
-	if err != nil {
-		return nil, err
-	}
-
 	storage := &Storage{
 		Events: make(chan Event),
-		config: config,
 	}
 	storage.initEventStream()
 
@@ -49,19 +39,27 @@ func (s *Storage) initEventStream() {
 }
 
 func (s *Storage) GetCurrentPlayer() (string, error) {
-	val, err := s.config.LookupString(CURRENT_PLAYER_CONFIG_KEY)
+	contents, err := s.getFileContents(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
 	if err != nil {
 		return "", err
 	}
 
-	return val, nil
+	return string(contents), nil
 }
 
 func (s *Storage) SetCurrentPlayer(playerId string) error {
-	if err := s.config.SetString(CURRENT_PLAYER_CONFIG_KEY, playerId); err != nil {
+	file, err := os.Create(s.path + "/.git/" + CURRENT_PLAYER_CONFIG_KEY)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(playerId)
+	if err != nil {
 		return err
 	}
 
+	file.Sync()
 	return nil
 }
 
@@ -78,7 +76,7 @@ func (s *Storage) OpenRepository(path string) error {
 
 func (s *Storage) CloneRepository(repoUrl string, path string) error {
 	checkoutOptions := &git.CheckoutOpts{
-		Strategy: git.CheckoutSafe,
+		Strategy: git.CheckoutSafeCreate,
 	}
 	cloneOptions := &git.CloneOptions{
 		Bare:           false,
@@ -122,13 +120,12 @@ func (s *Storage) StorePlayer(hero HeroSheet) error {
 	}
 
 	file.Sync()
-	return nil
-	//return s.commitCurrentIndex()
-	//if err != nil {
-	//	return err
-	//}
+	err = s.commitCurrentIndex("Added new player: " + hero.Name)
+	if err != nil {
+		return err
+	}
 
-	//return s.pushLatestCommits()
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) storeEvent(event Event) error {
@@ -153,14 +150,14 @@ func (s *Storage) storeEvent(event Event) error {
 	defer file.Close()
 
 	file.WriteString(event.Message + "\n")
+	file.Sync()
 
-	return nil
-	//return s.commitCurrentIndex()
-	//if err != nil {
-	//	return err
-	//}
+	err = s.commitCurrentIndex("Event: " + event.Message)
+	if err != nil {
+		return err
+	}
 
-	//return s.pushLatestCommits()
+	return s.pushLatestCommits()
 }
 
 func (s *Storage) GetNewUpdates() error {
@@ -172,19 +169,19 @@ func (s *Storage) GetNewUpdates() error {
 	return remote.Fetch([]string{"master"}, nil, "")
 }
 
-func (s *Storage) GetPlayer(playerId string) (HeroSheet, error) {
+func (s *Storage) GetPlayer(playerId string) (*HeroSheet, error) {
 	contents, err := s.getFileContents(s.path + "/players/" + playerId + "/" + playerId)
 	if err != nil {
-		return HeroSheet{}, err
+		return nil, err
 	}
 
 	heroSheet := HeroSheet{}
 	err = json.Unmarshal(contents, &heroSheet)
 	if err != nil {
-		return HeroSheet{}, err
+		return nil, err
 	}
 
-	return heroSheet, nil
+	return &heroSheet, nil
 }
 
 func (s *Storage) GetGameObject(id string) ([]byte, error) {
@@ -201,7 +198,13 @@ func (s *Storage) getFileContents(filename string) ([]byte, error) {
 	return contents, err
 }
 
-func (s *Storage) commitCurrentIndex() error {
+func (s *Storage) commitCurrentIndex(message string) error {
+	signature := &git.Signature{
+		Name:  "shark_sandwich_engine",
+		Email: "shark@sandwich.com",
+		When:  time.Now(),
+	}
+
 	index, err := s.repository.Index()
 	if err != nil {
 		return err
@@ -212,7 +215,32 @@ func (s *Storage) commitCurrentIndex() error {
 		return err
 	}
 
-	_, err = index.WriteTreeTo(s.repository)
+	treeId, err := index.WriteTree()
+	if err != nil {
+		return err
+	}
+
+	err = index.Write()
+	if err != nil {
+		return err
+	}
+
+	tree, err := s.repository.LookupTree(treeId)
+	if err != nil {
+		return err
+	}
+
+	head, err := s.repository.Head()
+	if err != nil {
+		return err
+	}
+
+	commitTarget, err := s.repository.LookupCommit(head.Target())
+	if err != nil {
+		return err
+	}
+
+	_, err = s.repository.CreateCommit("HEAD", signature, signature, message, tree, commitTarget)
 	if err != nil {
 		return err
 	}
@@ -221,10 +249,11 @@ func (s *Storage) commitCurrentIndex() error {
 }
 
 func (s *Storage) pushLatestCommits() error {
-	remote, err := s.repository.LookupRemote("origin")
-	if err != nil {
-		return err
-	}
+	//remote, err := s.repository.LookupRemote("origin")
+	//if err != nil {
+	//	return err
+	//}
 
-	return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
+	//return remote.Push([]string{"refs/heads/master"}, nil, nil, "")
+	return nil
 }
