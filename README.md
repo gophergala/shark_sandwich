@@ -7,7 +7,6 @@ An external git repo has been created on Google cloud compute instance for this 
 ### To Test
 
  * git clone http://104.154.43.42/git/shark-sandwich-game-server
- * add a line to the README, checkin and push
 
 ### To launch game
 
