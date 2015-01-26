@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type (
 	FightEvent struct {
@@ -22,7 +25,7 @@ func NewGameWorld(hero *HeroSheet) *GameWorld {
 
 func (g *GameWorld) initStorage(events chan string) {
 	for event := range events {
-		if event == "You Won" {
+		if strings.HasPrefix(event, "You Won") {
 			g.Hero.Xp = g.Hero.Xp + 10
 			log := LogEvent{
 				"Fight: " + event,
