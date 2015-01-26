@@ -28,6 +28,7 @@ If your character dies, your present day character becomes another descendent in
 ### Background
 
 We wanted to see if there was a way to build a multi-player game that could take advantage of the distributed nature of git. Events in the game are stored as a timeline of git commits. At any time a game can be replayed by playing back the commit timeline. The entire game state can be re-built as needed to any point. This is a powerful concept, because you can start to step back in time, and by altering the timeline, effectively change the course of history. This opens the door to all sorts of possibilities.
+https://github.com/gophergala/shark_sandwich/releases/download/0.0.1/shark_sandwich_osx.zip
 
 By tapping into the distributed nature of git and all the available resources around git, the games becomes very open and portable. You can share the game you are playing with others and let them actually see what has happened.
 
@@ -42,6 +43,10 @@ An external git repo has been created on Google cloud compute instance for this 
 ### How to Play
 
 We have binaries for all platforms ready for download. Download the binary for your system.
+
+Linux - https://github.com/gophergala/shark_sandwich/releases/download/0.0.1/shark_sandwich_linux.tar.gz
+
+osx - https://github.com/gophergala/shark_sandwich/releases/download/0.0.1/shark_sandwich_osx.zip
 
 When the game first launches, it will ask you for a folder path of where to store the game. Enter any folder location of your choosing.
 
