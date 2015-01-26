@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 	"math/rand"
 )
 
@@ -43,6 +44,7 @@ func generateEnemy() string {
 }
 
 func (a *Adventure) Embark(pve *PveFight) {
+	ct.ChangeColor(ct.Magenta, true, ct.None, false)
 	switch a.Type {
 	case ADVENTURE_TYPE_DISCOVERY:
 		fmt.Println("You didn't discover anything, too bad.")
@@ -65,4 +67,5 @@ func (a *Adventure) Embark(pve *PveFight) {
 	case ADVENTURE_TYPE_WANDER:
 		fmt.Println("You wandered right back to where you started")
 	}
+	ct.ResetColor()
 }

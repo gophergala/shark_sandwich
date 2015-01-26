@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 )
 
 type LogEvent struct {
@@ -45,6 +46,7 @@ func (s *GameLog) storeLogEvent(logEvent LogEvent) {
 }
 
 func (*GameLog) PrintGameLog() {
+	ct.ChangeColor(ct.Yellow, true, ct.None, false)
 	fmt.Println()
 	fmt.Println("Game Log")
 	fmt.Println("--------")
@@ -52,4 +54,5 @@ func (*GameLog) PrintGameLog() {
 		fmt.Println(gameLog)
 	}
 	fmt.Println()
+	ct.ResetColor()
 }
