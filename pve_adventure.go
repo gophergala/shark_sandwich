@@ -43,6 +43,18 @@ func generateEnemy() string {
 	return names[rand.Intn(len(names))]
 }
 
+func generateNothing() string {
+	messages := []string{
+		"You wandered around a bit, got bored, and went home.",
+		"You forgot to go to the bathroom before you left, and went home.",
+		"You got turned around somewhere and ended up at home.",
+		"You wandered around, saw a stump, a leaf, and a caterpillar, then went home.",
+		"You had an anticlimactic experience and wound up back at home with a cup of tea.",
+	}
+
+	return messages[rand.Intn(len(messages))]
+}
+
 func (a *Adventure) Embark(pve *PveFight) {
 	ct.ChangeColor(ct.Magenta, true, ct.None, false)
 	switch a.Type {
@@ -65,7 +77,7 @@ func (a *Adventure) Embark(pve *PveFight) {
 		fmt.Printf("%s attacks you! Check 'log' to see the result.\n", enemyName)
 		pve.Fight(a.HeroSheet, enemey)
 	case ADVENTURE_TYPE_WANDER:
-		fmt.Println("You wandered right back to where you started")
+		fmt.Println(generateNothing())
 	}
 	ct.ResetColor()
 }
