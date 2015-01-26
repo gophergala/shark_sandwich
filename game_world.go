@@ -4,14 +4,15 @@ import "fmt"
 
 type (
 	FightEvent struct {
-		Won bool
+		Won       bool
+		EnemyName string
 		Event
 	}
 
 	GameWorld struct {
-		Hero *HeroSheet
+		Hero      *HeroSheet
 		SendEvent chan string
-		SendLog chan LogEvent
+		SendLog   chan LogEvent
 	}
 )
 
@@ -23,7 +24,7 @@ func (g *GameWorld) initStorage(events chan string) {
 	for event := range events {
 		if event == "You Won" {
 			g.Hero.Xp = g.Hero.Xp + 10
-			log := LogEvent {
+			log := LogEvent{
 				"Fight: " + event,
 				int(g.Hero.Xp),
 				int(g.Hero.Life),
@@ -33,7 +34,7 @@ func (g *GameWorld) initStorage(events chan string) {
 			}
 			g.SendLog <- log
 		} else {
-			log := LogEvent {
+			log := LogEvent{
 				"Fight: " + event,
 				int(g.Hero.Xp),
 				int(g.Hero.Life),
@@ -49,7 +50,7 @@ func (g *GameWorld) initStorage(events chan string) {
 func (g *GameWorld) addChannel(events chan interface{}) {
 	go func() {
 		for {
-			e := <- events
+			e := <-events
 			switch event := e.(type) {
 			case FightEvent:
 				message := fmt.Sprintf("Fight: %s\n", event.String())
@@ -57,7 +58,7 @@ func (g *GameWorld) addChannel(events chan interface{}) {
 				if event.Won {
 					g.Hero.Xp = g.Hero.Xp + 10
 				}
-				log := LogEvent {
+				log := LogEvent{
 					message,
 					int(g.Hero.Xp),
 					int(g.Hero.Life),
@@ -73,8 +74,8 @@ func (g *GameWorld) addChannel(events chan interface{}) {
 
 func (f *FightEvent) String() string {
 	if f.Won {
-		return "You Won"
+		return "You Won a fight with a " + f.EnemyName
 	} else {
-		return "You Lost"
+		return "You Lost a fight with a " + f.EnemyName
 	}
 }

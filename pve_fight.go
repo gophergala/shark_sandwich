@@ -56,10 +56,10 @@ func (f *PveFight) Fight(hero *HeroSheet, npc *NPCUnit) {
 	for !heroWon && !npcWon {
 		select {
 		case heroWon = <-heroWin:
-			f.SendEvent <- FightEvent{Won: true}
+			f.SendEvent <- FightEvent{Won: true, EnemyName: npc.BaseStats.Name}
 			break
 		case npcWon = <-npcWin:
-			f.SendEvent <- FightEvent{Won: false}
+			f.SendEvent <- FightEvent{Won: false, EnemyName: npc.BaseStats.Name}
 			break
 		case <-time.Tick(time.Duration(hero.Speed)):
 			go func() {
