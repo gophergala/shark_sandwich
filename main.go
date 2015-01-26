@@ -37,6 +37,9 @@ func main() {
 
 	gameWorld := NewGameWorld(hero)
 
+	recieveStorage := storage.InitEventStream(gameWorld.SendEvent)
+	gameWorld.initStorage(recieveStorage)
+	
 	gameLog := &GameLog{}
 	gameLog.InitLogEventStream(gameWorld.SendLog)
 	fmt.Println("My Hero")
