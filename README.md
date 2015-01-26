@@ -4,9 +4,9 @@
 
 An external git repo has been created on Google cloud compute instance for this app to use as a 'game server'. This server is wide open with no auth required.
 
-### To Test
+### External Git URL
 
- * git clone http://104.154.43.42/git/shark-sandwich-game-server
+ * http://104.154.43.42/git/shark-sandwich-game-server
 
 ### To launch game
 
